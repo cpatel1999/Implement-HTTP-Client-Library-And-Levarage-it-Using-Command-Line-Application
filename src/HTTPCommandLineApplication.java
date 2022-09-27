@@ -10,10 +10,10 @@ public class HTTPCommandLineApplication {
         HTTPClientLibrary clientLibrary = new HTTPClientLibrary();
         do {
             userInput = sc.nextLine();
-            if(userInput.startsWith("httpc")) {
-                if(userInput.contains("help") && userInput.indexOf("help") == 6) {
+            if (userInput.startsWith("httpc")) {
+                if (userInput.contains("help") && userInput.indexOf("help") == 6) {
 
-                    if(userInput.endsWith("help")) {
+                    if (userInput.endsWith("help")) {
 
                         System.out.println("\nhttpc is a curl-like application but supports HTTP protocol only.\n"
                                 + "Usage:\n"
@@ -32,7 +32,7 @@ public class HTTPCommandLineApplication {
                                 + "\t -h key:value \t\t Associates headers to HTTP Request with the format\n"
                                 + "'key:value'");
 
-                    }  else if (userInput.contains("post") && userInput.indexOf("post") == 11 && userInput.endsWith("post")) {
+                    } else if (userInput.contains("post") && userInput.indexOf("post") == 11 && userInput.endsWith("post")) {
 
                         System.out.println("\nusage: httpc post [-v] [-h key:value] [-d inline-data] [-f file] URL\n"
                                 + "Post executes a HTTP POST request for a given URL with inline data or from file.\n"
@@ -46,23 +46,27 @@ public class HTTPCommandLineApplication {
                         System.out.println("Invalid help Command");
                     }
                 } else {
-                    if (userInput.contains("get") && !(userInput.endsWith("help")) && !(userInput.endsWith("get")))
-                    {
-                        if(userInput.contains("-d") || userInput.contains("-f")) {
+                    if (userInput.contains("get") && !(userInput.endsWith("help")) && !(userInput.endsWith("get"))) {
+                        if (userInput.contains("-d") || userInput.contains("-f")) {
                             System.out.println("GET command can not have -d or -f as options. \nTry Again");
                             continue;
                         }
-//                        String URLString = userInput.substring(userInput.indexOf("http://"), userInput.length() - 1);
                         String data = userInput.substring(userInput.indexOf("get") + 4);
-//                        String response = clientLibrary.get(data);
                         System.out.println(clientLibrary.get(data));
+
+                    } else if (userInput.contains("post") && !(userInput.endsWith("help"))) {
+                        if (userInput.contains("-d") && userInput.contains("-f")) {
+                            System.out.println("POST command can have either -d or -f but not both of them together as options. \nTry Again");
+                            continue;
                         }
+                        String data = userInput.substring(userInput.indexOf("get") + 5);
+                        System.out.println(clientLibrary.post(data));
+
+                    } else {
+                        System.out.println("Invalid  GET/POST Command");
                     }
                 }
-
-
-        } while(!userInput.equals("exit"));
-
+            }
+        } while (!userInput.equals("exit"));
     }
-
 }

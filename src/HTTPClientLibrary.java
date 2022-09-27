@@ -10,8 +10,9 @@ public class HTTPClientLibrary {
 
     String hostName, rawPath, rawQuery;
     int portNumber;
+
     public String fetchValidURL(String URLString) {
-        if(URLString.contains(" ")) {
+        if (URLString.contains(" ")) {
             URLString = URLString.split(" ")[0];
         }
         return URLString;
@@ -23,17 +24,17 @@ public class HTTPClientLibrary {
         rawQuery = uri.getRawQuery();
         portNumber = uri.getPort();
 
-        if(rawPath == null || rawPath.length() == 0) {
+        if (rawPath == null || rawPath.length() == 0) {
             rawPath = "/";
         }
 
-        if(rawQuery != null) {
+        if (rawQuery != null) {
             rawQuery = "?" + rawQuery;
         } else {
             rawQuery = "";
         }
 
-        if(portNumber == -1) {
+        if (portNumber == -1) {
             portNumber = 80;
         }
     }
@@ -46,21 +47,17 @@ public class HTTPClientLibrary {
                 //headerList.add(data.get(i + 1));
 
                 //TODO: Check this condition
-                if(dataList.get(i+1).charAt(0) == '\'')
-                {
+                if (dataList.get(i + 1).charAt(0) == '\'') {
                     temp = dataList.get(i + 1).substring(1, dataList.get(i + 1).length() - 1);
-                }
-                else
-                {
-                    temp = dataList.get(i+1);
+                } else {
+                    temp = dataList.get(i + 1);
                 }
                 headers.add(temp);
             }
         }
 
-        if(!headers.isEmpty())
-        {
-            for(int i = 0; i < headers.size(); i++) {
+        if (!headers.isEmpty()) {
+            for (int i = 0; i < headers.size(); i++) {
                 String header = headers.get(i);
                 requestString.append(header.split(":")[0] + ": " + header.split(":")[1] + "\n");
             }
@@ -69,16 +66,31 @@ public class HTTPClientLibrary {
     }
 
     public String checkVerbosity(String data, String response) {
-        if(!data.contains("-v")) {
-                response = response.substring(response.indexOf("{"), response.lastIndexOf("}") + 1);
+        if (!data.contains("-v")) {
+            response = response.substring(response.indexOf("{"), response.lastIndexOf("}") + 1);
         }
         return response;
     }
+
+    public void writeResponseToFile(String fileName, String data) {
+        try {
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("Assignment 1/src/" + fileName));
+
+            bufferedWriter.write(data);
+            bufferedWriter.close();
+
+            System.out.println("Response successfully saved to " + fileName);
+
+        } catch (IOException ex) {
+            System.out.println("Error Writing file named '" + fileName + "'" + ex);
+        }
+    }
+
+
     public String get(String data) throws URISyntaxException, IOException {
 
         StringBuilder responseString = new StringBuilder("");
         StringBuilder requestString = new StringBuilder("");
-        ArrayList<String> headers = new ArrayList<>();
 
         //Fetch URL from argument
         String URLString = data.substring(data.indexOf("http://"), data.length() - 1);
@@ -88,11 +100,10 @@ public class HTTPClientLibrary {
         //Splits user arguments in dataList.
         List<String> dataList = Arrays.asList(data.split(" "));
 
-        //TODO: Modularize data extract
-        URI uri =  new URI(URLString);
+        URI uri = new URI(URLString);
         extractDatafromURL(uri);
 
-        requestString.append("GET " + rawPath + rawQuery + " HTTP/1.0" + "\n" + "Host: " + hostName +  "\n");
+        requestString.append("GET " + rawPath + rawQuery + " HTTP/1.0" + "\n" + "Host: " + hostName + "\n");
 
         requestString = createHeaderList(dataList, requestString);
         System.out.println("\n" + requestString.toString());
@@ -119,7 +130,7 @@ public class HTTPClientLibrary {
         response = checkVerbosity(data, response);
 
         // Writing Response to a file using -o
-        if(data.contains("-o ")) {
+        if (data.contains("-o ")) {
 
             String fileName = dataList.get(dataList.indexOf("-o") + 1);
 
@@ -130,19 +141,32 @@ public class HTTPClientLibrary {
         return response;
     }
 
-    public void writeResponseToFile(String fileName, String data)
-    {
-        try
-        {
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("Assignment 1/src/" + fileName));
+    public String post(String data) throws URISyntaxException {
 
-            bufferedWriter.write(data);
-            bufferedWriter.close();
+        StringBuilder responseString = new StringBuilder("");
+        StringBuilder requestString = new StringBuilder("");
+        String body;
+        int cl = 0;
 
-            System.out.println("Response successfully saved to " + fileName);
+        //Fetch URL from argument
+        String URLString = data.substring(data.indexOf("http://"), data.length() - 1);
 
-        } catch (IOException ex) {
-            System.out.println("Error Writing file named '" + fileName + "'" + ex);
+        //Check if URL is valid
+        URLString = fetchValidURL(URLString);
+
+        //Splits user arguments in dataList.
+        List<String> dataList = Arrays.asList(data.split(" "));
+
+        URI uri = new URI(URLString);
+        extractDatafromURL(uri);
+
+        requestString.append("POST " + rawPath + " HTTP/1.0" + "\n" + "Host: " + hostName + "\n" );
+        
+        // Inline Data using -d
+        if(data.contains("-d ")){
+            body = data.substring(data.indexOf("{", data.indexOf("-d")), data.indexOf("}")+1);
+            //System.out.println(body);
+            cl = body.length();
         }
     }
 
