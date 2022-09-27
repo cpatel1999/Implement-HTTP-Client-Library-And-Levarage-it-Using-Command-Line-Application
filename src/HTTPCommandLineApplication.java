@@ -1,11 +1,13 @@
+import java.io.IOException;
+import java.net.URISyntaxException;
 import java.util.Scanner;
 
 public class HTTPCommandLineApplication {
 
-    public static void main(String args[]) {
+    public static void main(String args[]) throws URISyntaxException, IOException {
         String userInput;
         Scanner sc = new Scanner(System.in);
-
+        HTTPClientLibrary clientLibrary = new HTTPClientLibrary();
         do {
             userInput = sc.nextLine();
             if(userInput.startsWith("httpc")) {
@@ -43,8 +45,21 @@ public class HTTPCommandLineApplication {
                     } else {
                         System.out.println("Invalid help Command");
                     }
+                } else {
+                    if (userInput.contains("get") && !(userInput.endsWith("help")) && !(userInput.endsWith("get")))
+                    {
+                        if(userInput.contains("-d") || userInput.contains("-f")) {
+                            System.out.println("GET command can not have -d or -f as options. \nTry Again");
+                            continue;
+                        }
+//                        String URLString = userInput.substring(userInput.indexOf("http://"), userInput.length() - 1);
+                        String data = userInput.substring(userInput.indexOf("get") + 4);
+//                        String response = clientLibrary.get(data);
+                        System.out.println(clientLibrary.get(data));
+                        }
+                    }
                 }
-            }
+
 
         } while(!userInput.equals("exit"));
 
