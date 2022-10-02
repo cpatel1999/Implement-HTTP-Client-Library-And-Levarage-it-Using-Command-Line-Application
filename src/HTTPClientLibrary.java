@@ -74,7 +74,7 @@ public class HTTPClientLibrary {
 
     public void writeResponseToFile(String fileName, String data) {
         try {
-            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("Assignment 1/src/" + fileName));
+            BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter("Files/" + fileName));
 
             bufferedWriter.write(data);
             bufferedWriter.close();
@@ -86,13 +86,13 @@ public class HTTPClientLibrary {
         }
     }
 
-    public String readDataFromFile(String fname) {
+    public String readDataFromFile(String fileName) {
         StringBuilder lines = new StringBuilder("");
         String line = null;
 
         try {
 
-            BufferedReader bufferedReader = new BufferedReader(new FileReader("Assignment 1/src/" + fname));
+            BufferedReader bufferedReader = new BufferedReader(new FileReader("Files/" + fileName));
 
             while ((line = bufferedReader.readLine()) != null) {
                 lines.append(line + "\n");
@@ -100,7 +100,7 @@ public class HTTPClientLibrary {
             }
             bufferedReader.close();
         } catch (IOException ex) {
-            System.out.println("Error reading file named '" + fname + "'" + ex);
+            System.out.println("Error reading file named '" + fileName + "'" + ex);
         }
 
         return lines.toString();
