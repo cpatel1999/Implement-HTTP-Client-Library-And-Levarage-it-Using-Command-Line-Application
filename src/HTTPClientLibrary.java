@@ -67,9 +67,9 @@ public class HTTPClientLibrary {
 
     public String checkVerbosity(String data, String response) {
         if (!data.contains("-v")) {
-            response = response.substring(response.indexOf("{"), response.lastIndexOf("}") + 1);
+            response = response.substring(response.indexOf("{"), response.lastIndexOf("}"));
         }
-        return response;
+        return response + "}";
     }
 
     public void writeResponseToFile(String fileName, String data) {
@@ -86,6 +86,25 @@ public class HTTPClientLibrary {
         }
     }
 
+    public String readDataFromFile(String fname) {
+        StringBuilder lines = new StringBuilder("");
+        String line = null;
+
+        try {
+
+            BufferedReader bufferedReader = new BufferedReader(new FileReader("Assignment 1/src/" + fname));
+
+            while ((line = bufferedReader.readLine()) != null) {
+                lines.append(line + "\n");
+
+            }
+            bufferedReader.close();
+        } catch (IOException ex) {
+            System.out.println("Error reading file named '" + fname + "'" + ex);
+        }
+
+        return lines.toString();
+    }
 
     public String get(String data) throws URISyntaxException, IOException {
 
@@ -94,19 +113,22 @@ public class HTTPClientLibrary {
 
         //Fetch URL from argument
         String URLString = data.substring(data.indexOf("http://"), data.length() - 1);
+
         //Check if URL is valid
         URLString = fetchValidURL(URLString);
 
         //Splits user arguments in dataList.
         List<String> dataList = Arrays.asList(data.split(" "));
 
+        //Create URI object for URL
         URI uri = new URI(URLString);
         extractDatafromURL(uri);
 
+        //Form the request string
         requestString.append("GET " + rawPath + rawQuery + " HTTP/1.0" + "\n" + "Host: " + hostName + "\n");
 
+        // Create header list
         requestString = createHeaderList(dataList, requestString);
-        System.out.println("\n" + requestString.toString());
         requestString.append("\n");
 
         //Socket created to the host
@@ -121,6 +143,8 @@ public class HTTPClientLibrary {
         BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
         String line;
         String response;
+
+        //Read response
         while ((line = br.readLine()) != null) {
             responseString.append(line + "\n");
         }
@@ -141,15 +165,15 @@ public class HTTPClientLibrary {
         return response;
     }
 
-    public String post(String data) throws URISyntaxException {
+    public String post(String data) throws URISyntaxException, IOException {
 
         StringBuilder responseString = new StringBuilder("");
         StringBuilder requestString = new StringBuilder("");
-        String body;
-        int cl = 0;
+        String arguments = "";
+        int length = 0;
 
         //Fetch URL from argument
-        String URLString = data.substring(data.indexOf("http://"), data.length() - 1);
+        String URLString = data.substring(data.indexOf("http://"));
 
         //Check if URL is valid
         URLString = fetchValidURL(URLString);
@@ -157,18 +181,65 @@ public class HTTPClientLibrary {
         //Splits user arguments in dataList.
         List<String> dataList = Arrays.asList(data.split(" "));
 
+        // Create URI Object from URL
         URI uri = new URI(URLString);
         extractDatafromURL(uri);
 
-        requestString.append("POST " + rawPath + " HTTP/1.0" + "\n" + "Host: " + hostName + "\n" );
-        
-        // Inline Data using -d
-        if(data.contains("-d ")){
-            body = data.substring(data.indexOf("{", data.indexOf("-d")), data.indexOf("}")+1);
-            //System.out.println(body);
-            cl = body.length();
-        }
-    }
+        //Form request string
+        requestString.append("POST " + rawPath + " HTTP/1.0" + "\n" + "Host: " + hostName + "\n");
 
+        // Read associated inline data represented using -d
+        if (data.contains("-d ")) {
+            arguments = data.substring(data.indexOf("{", data.indexOf("-d")), data.indexOf("}") + 1);
+            length = arguments.length();
+        }
+
+        // Read file Data using -f
+        if (data.contains("-f ")) {
+
+            String fileName = dataList.get(dataList.indexOf("-f") + 1);
+
+            arguments = readDataFromFile(fileName);
+            length = arguments.length();
+        }
+
+        requestString.append("Content-Length: " + length + "\n");
+
+        // Create header list
+        requestString = createHeaderList(dataList, requestString);
+        requestString.append("\n");
+        requestString.append(arguments);
+
+        //Socket created to the host
+        Socket socket = new Socket(hostName, portNumber);
+
+        //Request sent
+        PrintWriter writer = new PrintWriter(socket.getOutputStream());
+        writer.write(requestString.toString());
+        writer.flush();
+
+        // Response received
+        BufferedReader br = new BufferedReader(new InputStreamReader(socket.getInputStream()));
+        String line;
+        String response;
+
+        //Read response
+        while ((line = br.readLine()) != null) {
+            responseString.append(line + "\n");
+        }
+        response = responseString.toString();
+
+        //Check verbosity [-v]
+        response = checkVerbosity(data, response);
+
+        // Writing Response to a file using -o
+        if (data.contains("-o ")) {
+            String fileName = dataList.get(dataList.indexOf("-o") + 1);
+            writeResponseToFile(fileName, response);
+            return "";
+        }
+
+        return response;
+    }
 
 }
